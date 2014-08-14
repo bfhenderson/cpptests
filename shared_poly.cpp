@@ -1,34 +1,42 @@
 #include <iostream>
 #include <memory>
 
+// NOTE this was an inconclusive test :(
+//
 class Parent {
-    public:
-    char x = 'p';
+public:
+    char x;
+    Parent(char x = 'p') : x(x) {}
+    virtual void dump() {std::cout << "Parent:" << x << std::endl;}
 };
-class Child : public Parent {
-    public:
-    char x = 'c';
+
+class Child: public Parent {
+    char y;
+public:
+    Child(char x = 'c') : Parent(x), y('y') {}
+    void dump() {std::cout << "Child:" << x << std::endl;}
 };
 
 int main() {
-    auto parent = std::shared_ptr<Parent>(new Parent);
-    auto child = std::shared_ptr<Child>(new Child);
-    std::cout << "===Initially===" << std::endl;
-    std::cout << parent->x << std::endl;
-    std::cout << child->x << std::endl;
-    std::cout << "===Implicit Polymorphic===" << std::endl;
-    parent = child;
-    std::cout << parent->x << std::endl;
-    std::cout << child->x << std::endl;
-    std::cout << "===Explicit Polymorphic===" << std::endl;
-    parent = std::dynamic_pointer_cast<Parent>(child);
-    std::cout << parent->x << std::endl;
-    std::cout << child->x << std::endl;
-    std::cout << "===Non-polymorphic===" << std::endl;
-    auto parent2 = std::shared_ptr<Parent>(new Parent);
-    parent2->x = 'b';
-    parent = parent2;
-    std::cout << parent->x << std::endl;
-    std::cout << parent2->x << std::endl;
+    {
+        std::cout << "===shared_ptr polymorphic===" << std::endl;
+        auto parent = std::shared_ptr<Parent>(new Parent('p'));
+        auto child = std::shared_ptr<Child>(new Child('c'));
+        parent = child;
+        parent->dump();
+        child->dump();
+
+    }
+    {
+        std::cout << "===shared_ptr& implicit polymorphic===" << std::endl;
+        auto child = std::shared_ptr<Child>(new Child('c'));
+        // invalid initialization of reference (requires a const):
+        // std::shared_ptr<Parent>& badParent = child;
+        const std::shared_ptr<Parent>& parent = child;
+        parent->dump();
+        child->dump();
+        std::shared_ptr<Parent> parent2 = std::move(parent);
+        parent2->dump();
+    }
     return 0;
 }
